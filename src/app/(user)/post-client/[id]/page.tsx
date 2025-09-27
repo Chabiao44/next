@@ -18,22 +18,22 @@ interface Post {
   body: string;
 }
 
+type Props = {
+  params: { id: string };
+};
 
-export default function PostDetail() {
-  const params = useParams();
-  const id = params?.id as string; // id จะเป็น string
+export default function PostDetail({ params }: Props) {
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!id) return;
     const fetchData = async () => {
       try {
         const [postRes, commentRes] = await Promise.all([
-          fetch(`https://jsonplaceholder.typicode.com/posts/${id}`),
-          fetch(`https://jsonplaceholder.typicode.com/posts/${id}/comments`),
+          fetch(`https://jsonplaceholder.typicode.com/posts/${params.id}`),
+          fetch(`https://jsonplaceholder.typicode.com/posts/${params.id}/comments`),
         ]);
 
         if (!postRes.ok || !commentRes.ok) throw new Error("โหลดข้อมูลไม่ได้");
@@ -43,15 +43,19 @@ export default function PostDetail() {
 
         setPost(postData);
         setComments(commentData);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Unknown error");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [params.id]);
 
   if (loading) return <p>กำลังโหลด...</p>;
   if (error) return <p style={{ color: "red" }}>ผิดพลาด: {error}</p>;
